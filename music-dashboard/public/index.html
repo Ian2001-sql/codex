@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Music Sales Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 40px;
+      }
+      canvas {
+        max-width: 800px;
+      }
+      #results img {
+        width: 100px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Music Sales Dashboard</h1>
+    <canvas id="chart"></canvas>
+
+    <h2>Find Music</h2>
+    <input id="search" placeholder="Search artists or albums" />
+    <button onclick="search()">Search</button>
+    <div id="results"></div>
+
+    <script>
+      async function loadSales() {
+        const res = await fetch("/api/sales");
+        const data = await res.json();
+        const years = data.map((d) => d.Year);
+        const totals = data.map((d) => Number(d["Sales (Nominal)"]));
+        new Chart(document.getElementById("chart"), {
+          type: "line",
+          data: {
+            labels: years,
+            datasets: [
+              {
+                label: "Global Sales",
+                data: totals,
+                borderColor: "blue",
+                fill: false,
+              },
+            ],
+          },
+        });
+      }
+
+      async function search() {
+        const term = document.getElementById("search").value;
+        const res = await fetch("/api/search?term=" + encodeURIComponent(term));
+        const data = await res.json();
+        const container = document.getElementById("results");
+        container.innerHTML = data.results
+          .map(
+            (r) =>
+              `<div><img src="${r.artworkUrl100}"/><p>${r.collectionName}</p></div>`,
+          )
+          .join("");
+      }
+
+      loadSales();
+    </script>
+  </body>
+</html>
